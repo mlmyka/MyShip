@@ -7,7 +7,7 @@ public class SpaceBattleArena {
 
     public static void main(String[] args) {
 
-        TextClient.run("10.56.65.56", new MyShip());
+        TextClient.run("10.56.65.56", new Survivor());
 
     }
 }
