@@ -9,7 +9,7 @@ import java.awt.*;
  */
 public class Survivor extends BasicSpaceship {
     public enum shipState{
-        ROTATE, THRUST, BRAKE, IDLE, RADAR, STEER, FIRETORPEDO, ALLSTOP
+        ROTATE, THRUST, BRAKE, IDLE, RADAR, RADARRESULTS,STEER, FIRETORPEDO, ALLSTOP
     }
     private shipState state;
     private boolean inCircle;
@@ -20,7 +20,7 @@ public class Survivor extends BasicSpaceship {
     public RegistrationData registerShip(int numImages, int worldWidth, int worldHeight)
     {
 
-        state = shipState.RADAR;
+        state = shipState.THRUST;
         inCircle = false;
         return new RegistrationData("Jim", new Color(124, 201, 255), 0);
 
@@ -42,7 +42,7 @@ public class Survivor extends BasicSpaceship {
 
             case THRUST:
                 command = new ThrustCommand('B', 4, 0.6);
-                state = shipState.IDLE;
+                state = shipState.RADAR;
                 break;
             case BRAKE:
                 if(ship.getPosition().isCloseTo(middle, 40.0)){
@@ -55,22 +55,29 @@ public class Survivor extends BasicSpaceship {
                 }
                 break;
             case IDLE:
-                if(ship.getPosition().isCloseTo(middle, 200.0)){
-                    state = shipState.BRAKE;
-                }
-                else if(ship.getPosition().isCloseTo(middle, 1000.0) && inCircle == true){
-                    inCircle = false;
-                    state = shipState.ROTATE;
-                }
-                //command = new IdleCommand(0.1);
+                command = new IdleCommand(0.1);
+                state = shipState.THRUST;
                 break;
             case RADAR:
-                //command = new RadarCommand(3);
-                //int objects = new RadarResults().getNumObjects();
+                command = new RadarCommand(2);
+                state = shipState.RADARRESULTS;
                 break;
+            case RADARRESULTS:
+                command = new IdleCommand(.1);
+                List<ObjectStatus> results = new RadarResults().getByType("Asteroid");
+                if(!results.isEmpty()){
+                    state = shipState.FIRETORPEDO;
+                }
+                else{
+                    state = shipState.THRUST;
+                }
+
+                break;
+
             case STEER:
                 break;
             case FIRETORPEDO:
+
                 break;
             case ALLSTOP:
                 command = new AllStopCommand();
