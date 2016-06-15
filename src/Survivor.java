@@ -2,7 +2,8 @@ import ihs.apcs.spacebattle.*;
 import ihs.apcs.spacebattle.Point;
 import ihs.apcs.spacebattle.commands.*;
 
-import java.awt.*;
+import java.awt.Color;
+import java.util.List;
 
 /**
  * Created by bal_mcsheldon on 6/13/2016.
@@ -12,8 +13,7 @@ public class Survivor extends BasicSpaceship {
         ROTATE, THRUST, BRAKE, IDLE, RADAR, RADARRESULTS,STEER, FIRETORPEDO, ALLSTOP
     }
     private shipState state;
-    private boolean inCircle;
-    private Point middle;
+    List<ObjectStatus> results;
 
 
     @Override
@@ -21,7 +21,6 @@ public class Survivor extends BasicSpaceship {
     {
 
         state = shipState.THRUST;
-        inCircle = false;
         return new RegistrationData("Jim", new Color(124, 201, 255), 0);
 
     }
@@ -35,9 +34,11 @@ public class Survivor extends BasicSpaceship {
 
         switch(state){
             case ROTATE:
-                //int angleToMiddle = ship.getPosition().getAngleTo(middle);
-                command = new RotateCommand(ship.getPosition().getAngleTo(middle) - ship.getOrientation());
-                state = shipState.THRUST;
+                int i = 0;
+                ObjectStatus asteroidStatus = results.get(i);
+                Point pos = asteroidStatus.getPosition();
+                command = new RotateCommand(ship.getPosition().getAngleTo(pos) - ship.getOrientation());
+                state = shipState.FIRETORPEDO;
                 break;
 
             case THRUST:
@@ -45,31 +46,28 @@ public class Survivor extends BasicSpaceship {
                 state = shipState.RADAR;
                 break;
             case BRAKE:
-                if(ship.getPosition().isCloseTo(middle, 40.0)){
-                    inCircle = true;
                     command = new BrakeCommand(0.01);
                     state = shipState.IDLE;
-                }
-                else {
-                    state = shipState.IDLE;
-                }
                 break;
             case IDLE:
                 command = new IdleCommand(0.1);
                 state = shipState.THRUST;
                 break;
             case RADAR:
-                command = new RadarCommand(2);
+                command = new RadarCommand(4);
                 state = shipState.RADARRESULTS;
                 break;
             case RADARRESULTS:
                 command = new IdleCommand(.1);
-                List<ObjectStatus> results = new RadarResults().getByType("Asteroid");
-                if(!results.isEmpty()){
-                    state = shipState.FIRETORPEDO;
+                RadarResults res = env.getRadar();
+                List<ObjectStatus> results = res.getByType("Asteroid");
+                if(results.isEmpty()){
+                    state = shipState.RADAR;
                 }
                 else{
-                    state = shipState.THRUST;
+
+                    state = shipState.ROTATE;
+
                 }
 
                 break;
@@ -77,7 +75,8 @@ public class Survivor extends BasicSpaceship {
             case STEER:
                 break;
             case FIRETORPEDO:
-
+                command = new FireTorpedoCommand('F');
+                state = shipState.RADAR;
                 break;
             case ALLSTOP:
                 command = new AllStopCommand();
