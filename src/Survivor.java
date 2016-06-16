@@ -13,7 +13,7 @@ public class Survivor extends BasicSpaceship {
         ROTATE, THRUST, BRAKE, IDLE, RADAR, RADARRESULTS,STEER, FIRETORPEDO, ALLSTOP
     }
     private shipState state;
-    List<ObjectStatus> results;
+    RadarResults res;
 
 
     @Override
@@ -27,6 +27,9 @@ public class Survivor extends BasicSpaceship {
 
 
    @Override
+   /**
+    * switch statements to find next command
+    */
     public ShipCommand getNextCommand(BasicEnvironment env) {
         ObjectStatus ship = env.getShipStatus();
         ShipCommand command = new IdleCommand(.1);
@@ -35,9 +38,8 @@ public class Survivor extends BasicSpaceship {
         switch(state){
             case ROTATE:
                 int i = 0;
-                ObjectStatus asteroidStatus = results.get(i);
-                Point pos = asteroidStatus.getPosition();
-                command = new RotateCommand(ship.getPosition().getAngleTo(pos) - ship.getOrientation());
+               //gets the angle to the first asteroid in the radar and rotates to face it
+                command = new RotateCommand(ship.getPosition().getAngleTo(res.get(i).getPosition()) - ship.getOrientation());
                 state = shipState.FIRETORPEDO;
                 break;
 
@@ -54,14 +56,15 @@ public class Survivor extends BasicSpaceship {
                 state = shipState.THRUST;
                 break;
             case RADAR:
+                //sweeps the area for any object
                 command = new RadarCommand(4);
                 state = shipState.RADARRESULTS;
                 break;
             case RADARRESULTS:
                 command = new IdleCommand(.1);
-                RadarResults res = env.getRadar();
-                List<ObjectStatus> results = res.getByType("Asteroid");
-                if(results.isEmpty()){
+                res = env.getRadar();
+                //checks if there is any asteroids near my ship
+                if(res.getByType("Asteroid").isEmpty()){
                     state = shipState.RADAR;
                 }
                 else{
